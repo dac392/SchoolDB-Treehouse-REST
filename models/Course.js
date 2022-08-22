@@ -45,9 +45,9 @@ module.exports = (sequelize)=>{
 
     Course.associate = (models) =>{
         Course.belongsTo(models.User, {
-            as: 'CourseName?', // allias
+            as: 'Teacher', // allias
             foreignKey: {
-                fieldName: "CourseId?",
+                fieldName: "TeacherId",
                 allowNull: false
             }
         })
