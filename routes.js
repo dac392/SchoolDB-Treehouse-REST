@@ -4,6 +4,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const {User, Course} = require('./models');
 const {authenticateUser} = require('./middleware/authentication');
+const {handler} = require('./middleware/async-handler');
 const router = express.Router();
 
 let errors = [];
@@ -17,17 +18,12 @@ const id_to_user = {
     ]
 }
 
-
-function handler(cb){
-    return async (req, res, next)=>{
-        try{
-            console.log(req.body)
-            await cb(req, res, next);
-        }catch(error){
-            next(error);
-        }
-    }
-}
+/**
+ * Given a JSON and some keys, the function returns a douplicate item excluding the keys provided.
+ * @param {Object} obj - Json object given to the function
+ * @param {Keys} keys - List of tags which the function uses as keys to avoid
+ * @returns 
+ */
 function omit(obj, keys){
     let dup = {};
     for(let key in obj.dataValues) {
@@ -38,11 +34,17 @@ function omit(obj, keys){
     return dup
 }
 
+/**
+ * route that returns the authenticated user's information
+ */
 router.get('/users', authenticateUser ,handler( async (req, res)=>{
     const user = req.currentUser;
     res.status(200).json(omit(user, ['password', 'createdAt', 'updatedAt']));
 }));
 
+/**
+ * route allowing to post a new user
+ */
 router.post('/users', handler(async (req, res)=>{
     const user = req.body;
     let password = user.password;
@@ -69,7 +71,7 @@ router.get('/courses/', handler( async (req, res)=>{
     res.status(200).json(courses);
 }));
 
-// get a course
+// get a particular course
 router.get('/courses/:id', handler( async (req, res)=>{
     const course  = await Course.findByPk(req.params.id, id_to_user);
     res.status(200).json(course);
