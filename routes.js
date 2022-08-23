@@ -3,6 +3,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const {User, Course} = require('./models');
+const {authenticateUser} = require('./middleware/authentication');
 const router = express.Router();
 
 let errors = [];
@@ -11,7 +12,7 @@ const id_to_user = {
     include: [
         {
             model: User,
-            as: 'Teacher'
+            as: 'user'
         }
     ]
 }
@@ -27,9 +28,9 @@ function handler(cb){
     }
 }
 
-router.get('/users', handler( async (req, res)=>{
-    let users = await User.findAll();
-    res.json(users);
+router.get('/users', authenticateUser ,handler( async (req, res)=>{
+    const user = req.currentUser;
+    res.status(200).json(user);
 }));
 
 router.post('/users', handler(async (req, res)=>{
@@ -60,32 +61,48 @@ router.get('/courses/', handler( async (req, res)=>{
 
 // get a course
 router.get('/courses/:id', handler( async (req, res)=>{
-    console.log(req.params.id);
     const course  = await Course.findByPk(req.params.id, id_to_user);
     res.status(200).json(course);
 }));
 
 // post a course
-router.post('/courses/', handler( async (req, res)=>{
-    await Course.create(req.body);
+router.post('/courses/', authenticateUser, handler( async (req, res)=>{
+    // not sure if this is the intended use or not
+    const user = req.currentUser;
+    const info = req.body;
+    info.userId = user.id;
+    await Course.create(info);
     res.status(201).end();
 }));
 
 // update a course
-router.put('/courses/:id', handler( async (req, res)=>{
+router.put('/courses/:id', authenticateUser, handler( async (req, res)=>{
+    const user = req.currentUser;
     const update = await Course.findByPk(req.params.id);
-    //console.log(update)
-    update.update(req.body);
-    //console.log(update);
-    res.status(204).end();
+    console.dir(user);
+    console.dir(update);
+    console.log(user.id == update.userId);
+    if(user.id === update.userId){
+        update.update(req.body);
+        res.status(204).end();
+    }else{
+        res.status(401).json({ message: 'Access Denied' });
+    }
+
 
 }));
 
 // delete a course
-router.delete('/courses/:id', handler( async (req, res)=>{
+router.delete('/courses/:id', authenticateUser, handler( async (req, res)=>{
+    const user = req.currentUser;
     const del = await Course.findByPk(req.params.id);
-    del.destroy();
-    res.status(204).end();
+    if(user.id === del.userId){
+        del.destroy();
+        res.status(204).end();
+    }else{
+        res.status(401).json({ message: 'Access Denied' });
+    }
+
 }));
 
 module.exports = router;

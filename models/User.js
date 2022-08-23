@@ -44,9 +44,9 @@ module.exports = (sequelize)=>{
     }, {sequelize});
     User.associate = (models) =>{
         User.hasMany(models.Course, {
-            as: 'Teacher', // allias
+            as: 'user', // allias
             foreignKey: {
-                fieldName: "TeacherId",
+                fieldName: "userId",
                 allowNull: false
             }
         })
