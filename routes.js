@@ -27,7 +27,9 @@ const id_to_user = {
 function omit(obj, keys){
     let dup = {};
     for(let key in obj.dataValues) {
-        if(keys.indexOf(key) == -1){
+        if(key === "user"){
+            dup[key] = omit(obj[key], ['password', ...keys]);
+        }else if(keys.indexOf(key) == -1){
             dup[key] = obj[key];
         }
     }
@@ -68,13 +70,22 @@ router.post('/users', handler(async (req, res)=>{
 // get all courses
 router.get('/courses/', handler( async (req, res)=>{
     const courses = await Course.findAll(id_to_user);
-    res.status(200).json(courses);
+    if(courses){
+        const moded = courses.map((course)=>omit(course, ['createdAt', 'updatedAt']));
+    }
+
+    res.status(200).json(moded);
 }));
 
 // get a particular course
 router.get('/courses/:id', handler( async (req, res)=>{
     const course  = await Course.findByPk(req.params.id, id_to_user);
-    res.status(200).json(course);
+    if(course){
+        res.status(200).json(omit(course, ['createdAt', 'updatedAt']));
+    }else{
+        res.status(404).end();
+    }
+    
 }));
 
 // post a course
@@ -91,9 +102,7 @@ router.post('/courses/', authenticateUser, handler( async (req, res)=>{
 router.put('/courses/:id', authenticateUser, handler( async (req, res)=>{
     const user = req.currentUser;
     const update = await Course.findByPk(req.params.id);
-    console.dir(user);
-    console.dir(update);
-    console.log(user.id == update.userId);
+
     if(user.id === update.userId){
         update.update(req.body);
         res.status(204).end();
