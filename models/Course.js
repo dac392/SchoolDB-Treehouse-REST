@@ -27,18 +27,14 @@ module.exports = (sequelize)=>{
         },
         estimatedTime: {
             type: Sequelize.STRING,
-            allowNull: false,
             validate: {
                 notEmpty: {msg: '"estimatedTime" field cannot be empty'},
-                notNull: {msg: '"estimatedTime" field is required'}
             }
         },
         materialsNeeded: {
             type: Sequelize.STRING,
-            allowNull: false,
             validate: {
                 notEmpty: {msg: '"materialsNeeded" field cannot be empty'},
-                notNull: {msg: '"materialsNeeded" field is required'}
             }
         },
     }, {sequelize});

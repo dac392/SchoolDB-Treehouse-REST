@@ -17,6 +17,7 @@ const id_to_user = {
     ]
 }
 
+
 function handler(cb){
     return async (req, res, next)=>{
         try{
@@ -27,10 +28,19 @@ function handler(cb){
         }
     }
 }
+function omit(obj, keys){
+    let dup = {};
+    for(let key in obj.dataValues) {
+        if(keys.indexOf(key) == -1){
+            dup[key] = obj[key];
+        }
+    }
+    return dup
+}
 
 router.get('/users', authenticateUser ,handler( async (req, res)=>{
     const user = req.currentUser;
-    res.status(200).json(user);
+    res.status(200).json(omit(user, ['password', 'createdAt', 'updatedAt']));
 }));
 
 router.post('/users', handler(async (req, res)=>{
