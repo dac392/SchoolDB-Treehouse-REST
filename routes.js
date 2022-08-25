@@ -48,33 +48,29 @@ router.get('/users', authenticateUser ,handler( async (req, res)=>{
  * route allowing to post a new user
  */
 router.post('/users', handler(async (req, res)=>{
+
     const user = req.body;
     let password = user.password;
-    if (!password) {
-        errors.push('Please provide a value for "password"');
-    } else if (password.length < 8 || password.length > 20) {
-        errors.push('Your password should be between 8 and 20 characters');
-    } else {
+    if(password){
         user.password = bcrypt.hashSync(password, 10);
     }
 
-    if(errors.length > 0){
-        res.status(400).json({errors});
-    }else{
-        await User.create(req.body);
-        res.status(201).end();
-    }
+    await User.create(req.body);
+    res.status(201).header({"location":"/"}).end();
 
 }));
 
 // get all courses
 router.get('/courses/', handler( async (req, res)=>{
     const courses = await Course.findAll(id_to_user);
+    
     if(courses){
         const moded = courses.map((course)=>omit(course, ['createdAt', 'updatedAt']));
+        res.status(200).json(moded);
     }
 
-    res.status(200).json(moded);
+    res.status(200).json(courses);
+
 }));
 
 // get a particular course
@@ -95,7 +91,7 @@ router.post('/courses/', authenticateUser, handler( async (req, res)=>{
     const info = req.body;
     info.userId = user.id;
     await Course.create(info);
-    res.status(201).end();
+    res.status(201).header({"location":"/"}).end();
 }));
 
 // update a course
@@ -104,8 +100,11 @@ router.put('/courses/:id', authenticateUser, handler( async (req, res)=>{
     const update = await Course.findByPk(req.params.id);
 
     if(user.id === update.userId){
-        update.update(req.body);
+
+        await update.update(req.body);
         res.status(204).end();
+
+
     }else{
         res.status(401).json({ message: 'Access Denied' });
     }
@@ -117,7 +116,7 @@ router.put('/courses/:id', authenticateUser, handler( async (req, res)=>{
 router.delete('/courses/:id', authenticateUser, handler( async (req, res)=>{
     const user = req.currentUser;
     const del = await Course.findByPk(req.params.id);
-    console.log(del)
+
     if(!del){
         res.status(404).end();
     } else if(user.id === del.userId) {
