@@ -45,6 +45,15 @@ router.get('/users', authenticateUser ,handler( async (req, res)=>{
 }));
 
 /**
+ * debug
+ */
+ router.get('/users-all', handler( async (req, res)=>{
+    const user = await User.findAll();
+    const all = user.map((person)=>omit(person, ['password', 'createdAt', 'updatedAt']))
+    res.status(200).json(all);
+}));
+
+/**
  * route allowing to post a new user
  */
 router.post('/users', handler(async (req, res)=>{
