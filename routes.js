@@ -72,13 +72,12 @@ router.post('/users', handler(async (req, res)=>{
 // get all courses
 router.get('/courses/', handler( async (req, res)=>{
     const courses = await Course.findAll(id_to_user);
-    
+    let moded;
     if(courses){
         const moded = courses.map((course)=>omit(course, ['createdAt', 'updatedAt']));
-        res.status(200).json(moded);
     }
 
-    res.status(200).json(courses);
+    res.status(200).json(moded? moded : courses);
 
 }));
 
@@ -115,7 +114,7 @@ router.put('/courses/:id', authenticateUser, handler( async (req, res)=>{
 
 
     }else{
-        res.status(401).json({ message: 'Access Denied' });
+        res.status(403).json({ message: 'Access Denied' });
     }
 
 
@@ -132,7 +131,7 @@ router.delete('/courses/:id', authenticateUser, handler( async (req, res)=>{
         del.destroy();
         res.status(204).end();
     }else{
-        res.status(401).json({ message: 'Access Denied' });
+        res.status(403).json({ message: 'Access Denied' });
     }
 
 }));
