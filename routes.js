@@ -10,10 +10,12 @@ const router = express.Router();
 let errors = [];
 
 const id_to_user = {
+    attributes:['id','title','description','estimatedTime','materialsNeeded','userId',],
     include: [
         {
             model: User,
-            as: 'user'
+            as: 'user',
+            attributes: ['firstName','lastName','emailAddress']
         }
     ]
 }
@@ -79,8 +81,8 @@ router.get('/courses/', handler( async (req, res)=>{
     if(courses){
         const moded = courses.map((course)=>omit(course, ['createdAt', 'updatedAt']));
     }
-
-    res.status(200).json(moded? moded : courses);
+    // moded? moded : courses
+    res.status(200).json(courses);
 
 }));
 
@@ -88,7 +90,7 @@ router.get('/courses/', handler( async (req, res)=>{
 router.get('/courses/:id', handler( async (req, res)=>{
     const course  = await Course.findByPk(req.params.id, id_to_user);
     if(course){
-        res.status(200).json(omit(course, ['createdAt', 'updatedAt']));
+        res.status(200).json(course);
     }else{
         res.status(404).end();
     }
