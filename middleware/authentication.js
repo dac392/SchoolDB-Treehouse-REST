@@ -10,6 +10,7 @@ const bcrypt = require('bcryptjs');
  * @param {Function} next - The function to call to pass execution to the next middleware.
  */
 exports.authenticateUser = async (req, res, next)=>{
+    // console.log(req);
     let message;
     const credentials = auth(req);
 
@@ -32,7 +33,9 @@ exports.authenticateUser = async (req, res, next)=>{
 
     if (message) {
         //console.warn(message);
-        res.status(401).json({ message: 'Access Denied' });
+        // res.status(403).json({ message: 'Access Denied' });
+        req.authStatus = 401;
+        next();
     } else {
         next();
     }

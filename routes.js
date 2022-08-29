@@ -40,6 +40,9 @@ function omit(obj, keys){
  * route that returns the authenticated user's information
  */
 router.get('/users', authenticateUser ,handler( async (req, res)=>{
+    if(req.authStatus === 401){
+        return res.status(401).json({message: "Access denied"});
+    }
     const user = req.currentUser;
     res.status(200).json(omit(user, ['password', 'createdAt', 'updatedAt']));
 }));
@@ -94,6 +97,9 @@ router.get('/courses/:id', handler( async (req, res)=>{
 
 // post a course
 router.post('/courses/', authenticateUser, handler( async (req, res)=>{
+    if(req.authStatus === 401){
+        return res.status(401).json({message: "Access denied"});
+    }
     // not sure if this is the intended use or not
     const user = req.currentUser;
     const info = req.body;
@@ -104,15 +110,16 @@ router.post('/courses/', authenticateUser, handler( async (req, res)=>{
 
 // update a course
 router.put('/courses/:id', authenticateUser, handler( async (req, res)=>{
+    if(req.authStatus === 401){
+        return res.status(403).json({ message: 'Access Denied' });
+    }
+
     const user = req.currentUser;
     const update = await Course.findByPk(req.params.id);
 
     if(user.id === update.userId){
-
         await update.update(req.body);
         res.status(204).end();
-
-
     }else{
         res.status(403).json({ message: 'Access Denied' });
     }
@@ -122,13 +129,16 @@ router.put('/courses/:id', authenticateUser, handler( async (req, res)=>{
 
 // delete a course
 router.delete('/courses/:id', authenticateUser, handler( async (req, res)=>{
+    if(req.authStatus === 401){
+        return res.status(403).json({ message: 'Access Denied' });
+    }
     const user = req.currentUser;
     const del = await Course.findByPk(req.params.id);
 
     if(!del){
         res.status(404).end();
     } else if(user.id === del.userId) {
-        del.destroy();
+        await del.destroy();
         res.status(204).end();
     }else{
         res.status(403).json({ message: 'Access Denied' });
